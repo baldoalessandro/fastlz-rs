@@ -1,4 +1,21 @@
+#![allow(dead_code)]
+#![allow(mutable_transmutes)]
+#![allow(non_camel_case_types)]
+#![allow(non_snake_case)]
+#![allow(non_upper_case_globals)]
+#![allow(unused_assignments)]
+#![allow(unused_mut)]
+#![feature(extern_types)]
+#![feature(main)]
+#![feature(ptr_wrapping_offset_from)]
+#![feature(register_tool)]
+#![register_tool(c2rust)]
+
 use ::libc;
+use ::fastlz_rs;
+
+mod refimpl;
+
 extern "C" {
     pub type _IO_wide_data;
     pub type _IO_codecvt;
@@ -452,7 +469,9 @@ pub unsafe extern "C" fn test_roundtrip_level2(mut name: *const libc::c_char,
     printf(b"%25s %10ld  -> %10d  (%.2f%%)\n\x00" as *const u8 as
                *const libc::c_char, name, file_size, compressed_size, ratio);
 }
-unsafe fn main_0(mut argc: libc::c_int, mut argv: *mut *mut libc::c_char)
+
+
+unsafe fn main_0()
  -> libc::c_int {
     let mut prefix: *const libc::c_char =
         b"../compression-corpus/\x00" as *const u8 as *const libc::c_char;
@@ -563,7 +582,9 @@ unsafe fn main_0(mut argc: libc::c_int, mut argv: *mut *mut libc::c_char)
     printf(b"\n\x00" as *const u8 as *const libc::c_char);
     return 0 as libc::c_int;
 }
-#[main]
+
+
+#[test]
 pub fn main() {
     let mut args: Vec<*mut libc::c_char> = Vec::new();
     for arg in ::std::env::args() {
@@ -571,8 +592,6 @@ pub fn main() {
     };
     args.push(::std::ptr::null_mut());
     unsafe {
-        ::std::process::exit(main_0((args.len() - 1) as libc::c_int,
-                                    args.as_mut_ptr() as
-                                        *mut *mut libc::c_char) as i32)
+        ::std::process::exit(main_0() as i32)
     }
 }

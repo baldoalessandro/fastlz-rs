@@ -12,7 +12,6 @@ autobins = false
 
 [lib]
 name = "fastlz_rs"
-path = "lib.rs"
 crate-type = ["staticlib", "rlib"]
 
 

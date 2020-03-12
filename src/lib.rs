@@ -12,16 +12,6 @@
 #![register_tool(c2rust)]
 
 
-
 extern crate libc;
 
-
-
-pub mod src {
 pub mod fastlz;
-pub mod tests {
-pub mod refimpl;
-pub mod test_roundtrip;
-} // mod tests
-} // mod src
-
