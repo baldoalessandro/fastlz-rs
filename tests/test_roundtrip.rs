@@ -14,6 +14,9 @@
 use ::libc;
 use ::fastlz_rs;
 
+use std::ffi::CString;
+
+
 mod refimpl;
 
 extern "C" {
@@ -471,122 +474,100 @@ pub unsafe extern "C" fn test_roundtrip_level2(mut name: *const libc::c_char,
 }
 
 
-unsafe fn main_0()
- -> libc::c_int {
-    let mut prefix: *const libc::c_char =
-        b"../compression-corpus/\x00" as *const u8 as *const libc::c_char;
-    let mut names: [*const libc::c_char; 24] =
-        [b"canterbury/alice29.txt\x00" as *const u8 as *const libc::c_char,
-         b"canterbury/asyoulik.txt\x00" as *const u8 as *const libc::c_char,
-         b"canterbury/cp.html\x00" as *const u8 as *const libc::c_char,
-         b"canterbury/fields.c\x00" as *const u8 as *const libc::c_char,
-         b"canterbury/grammar.lsp\x00" as *const u8 as *const libc::c_char,
-         b"canterbury/kennedy.xls\x00" as *const u8 as *const libc::c_char,
-         b"canterbury/lcet10.txt\x00" as *const u8 as *const libc::c_char,
-         b"canterbury/plrabn12.txt\x00" as *const u8 as *const libc::c_char,
-         b"canterbury/ptt5\x00" as *const u8 as *const libc::c_char,
-         b"canterbury/sum\x00" as *const u8 as *const libc::c_char,
-         b"canterbury/xargs.1\x00" as *const u8 as *const libc::c_char,
-         b"silesia/dickens\x00" as *const u8 as *const libc::c_char,
-         b"silesia/mozilla\x00" as *const u8 as *const libc::c_char,
-         b"silesia/mr\x00" as *const u8 as *const libc::c_char,
-         b"silesia/nci\x00" as *const u8 as *const libc::c_char,
-         b"silesia/ooffice\x00" as *const u8 as *const libc::c_char,
-         b"silesia/osdb\x00" as *const u8 as *const libc::c_char,
-         b"silesia/reymont\x00" as *const u8 as *const libc::c_char,
-         b"silesia/samba\x00" as *const u8 as *const libc::c_char,
-         b"silesia/sao\x00" as *const u8 as *const libc::c_char,
-         b"silesia/webster\x00" as *const u8 as *const libc::c_char,
-         b"silesia/x-ray\x00" as *const u8 as *const libc::c_char,
-         b"silesia/xml\x00" as *const u8 as *const libc::c_char,
-         b"enwik/enwik8.txt\x00" as *const u8 as *const libc::c_char];
-    let count: libc::c_int =
-        (::std::mem::size_of::<[*const libc::c_char; 24]>() as
-             libc::c_ulong).wrapping_div(::std::mem::size_of::<*const libc::c_char>()
-                                             as libc::c_ulong) as libc::c_int;
-    let mut i: libc::c_int = 0;
-    printf(b"Test reference decompressor for Level 1\n\n\x00" as *const u8 as
-               *const libc::c_char);
-    i = 0 as libc::c_int;
-    while i < count {
-        let mut name: *const libc::c_char = names[i as usize];
-        let mut filename: *mut libc::c_char =
-            malloc(strlen(prefix).wrapping_add(strlen(name)).wrapping_add(1 as
-                                                                              libc::c_int
-                                                                              as
-                                                                              libc::c_ulong))
-                as *mut libc::c_char;
-        strcpy(filename, prefix);
-        strcat(filename, name);
-        test_ref_decompressor_level1(name, filename);
-        free(filename as *mut libc::c_void);
-        i += 1
-    }
-    printf(b"\n\x00" as *const u8 as *const libc::c_char);
-    printf(b"Test reference decompressor for Level 2\n\n\x00" as *const u8 as
-               *const libc::c_char);
-    i = 0 as libc::c_int;
-    while i < count {
-        let mut name_0: *const libc::c_char = names[i as usize];
-        let mut filename_0: *mut libc::c_char =
-            malloc(strlen(prefix).wrapping_add(strlen(name_0)).wrapping_add(1
-                                                                                as
-                                                                                libc::c_int
-                                                                                as
-                                                                                libc::c_ulong))
-                as *mut libc::c_char;
-        strcpy(filename_0, prefix);
-        strcat(filename_0, name_0);
-        test_ref_decompressor_level2(name_0, filename_0);
-        free(filename_0 as *mut libc::c_void);
-        i += 1
-    }
-    printf(b"\n\x00" as *const u8 as *const libc::c_char);
-    printf(b"Test round-trip for Level 1\n\n\x00" as *const u8 as
-               *const libc::c_char);
-    i = 0 as libc::c_int;
-    while i < count {
-        let mut name_1: *const libc::c_char = names[i as usize];
-        let mut filename_1: *mut libc::c_char =
-            malloc(strlen(prefix).wrapping_add(strlen(name_1)).wrapping_add(1
-                                                                                as
-                                                                                libc::c_int
-                                                                                as
-                                                                                libc::c_ulong))
-                as *mut libc::c_char;
-        strcpy(filename_1, prefix);
-        strcat(filename_1, name_1);
-        test_roundtrip_level1(name_1, filename_1);
-        free(filename_1 as *mut libc::c_void);
-        i += 1
-    }
-    printf(b"\n\x00" as *const u8 as *const libc::c_char);
-    printf(b"Test round-trip for Level 2\n\n\x00" as *const u8 as
-               *const libc::c_char);
-    i = 0 as libc::c_int;
-    while i < count {
-        let mut name_2: *const libc::c_char = names[i as usize];
-        let mut filename_2: *mut libc::c_char =
-            malloc(strlen(prefix).wrapping_add(strlen(name_2)).wrapping_add(1
-                                                                                as
-                                                                                libc::c_int
-                                                                                as
-                                                                                libc::c_ulong))
-                as *mut libc::c_char;
-        strcpy(filename_2, prefix);
-        strcat(filename_2, name_2);
-        test_roundtrip_level2(name_2, filename_2);
-        free(filename_2 as *mut libc::c_void);
-        i += 1
-    }
-    printf(b"\n\x00" as *const u8 as *const libc::c_char);
-    return 0 as libc::c_int;
-}
+
+const corpora_dir: &'static str = "../compression-corpus/";
+const corpora: &'static[&'static str] = &[
+    "canterbury/alice29.txt",
+    "canterbury/asyoulik.txt",
+    "canterbury/cp.html",
+    "canterbury/fields.c",
+    "canterbury/grammar.lsp",
+    "canterbury/kennedy.xls",
+    "canterbury/lcet10.txt",
+    "canterbury/plrabn12.txt",
+    "canterbury/ptt5",
+    "canterbury/sum",
+    "canterbury/xargs.1",
+    "silesia/dickens",
+    "silesia/mozilla",
+    "silesia/mr",
+    "silesia/nci",
+    "silesia/ooffice",
+    "silesia/osdb",
+    "silesia/reymont",
+    "silesia/samba",
+    "silesia/sao",
+    "silesia/webster",
+    "silesia/x-ray",
+    "silesia/xml",
+    "enwik/enwik8.txt"
+];
 
 
 #[test]
-pub fn main() {
-    unsafe {
-        ::std::process::exit(main_0() as i32)
-    }
+fn test_ref_impl_level1() {
+    println!("Test reference decompressor for Level 1");
+    corpora.iter().for_each(|corpus| {
+        println!("{}", corpus);
+        let f = format!("{}{}", corpora_dir, corpus);
+
+        let name: CString = CString::new(*corpus).unwrap();
+        let filename: CString = CString::new(f).unwrap();
+
+        unsafe {
+            test_ref_decompressor_level1(name.as_ptr(), filename.as_ptr());
+        }
+    });
+    println!();
+}
+
+#[test]
+fn test_ref_impl_level2() {
+    println!("Test reference decompressor for Level 2");
+    corpora.iter().for_each(|corpus| {
+        println!("{}", corpus);
+        let f = format!("{}{}", corpora_dir, corpus);
+
+        let name: CString = CString::new(*corpus).unwrap();
+        let filename: CString = CString::new(f).unwrap();
+
+        unsafe {
+            test_ref_decompressor_level2(name.as_ptr(), filename.as_ptr());
+        }
+    });
+    println!();
+}
+
+#[test]
+fn test_round_trip_level1() {
+    println!("Test round-trip for Level 1");
+    corpora.iter().for_each(|corpus| {
+        println!("{}", corpus);
+        let f = format!("{}{}", corpora_dir, corpus);
+
+        let name: CString = CString::new(*corpus).unwrap();
+        let filename: CString = CString::new(f).unwrap();
+
+        unsafe {
+            test_roundtrip_level1(name.as_ptr(), filename.as_ptr());
+        }
+    });
+    println!();
+}
+
+#[test]
+fn test_round_trip_level2() {
+    println!("Test round-trip for Level 2");
+    corpora.iter().for_each(|corpus| {
+        println!("{}", corpus);
+        let f = format!("{}{}", corpora_dir, corpus);
+
+        let name: CString = CString::new(*corpus).unwrap();
+        let filename: CString = CString::new(f).unwrap();
+
+        unsafe {
+            test_roundtrip_level2(name.as_ptr(), filename.as_ptr());
+        }
+    });
+    println!();
 }
