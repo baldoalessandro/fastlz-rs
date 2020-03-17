@@ -306,63 +306,38 @@ pub unsafe fn test_roundtrip_level1(name: &str, file_name: &str) {
   Compare the result with the original file content.
 */
 #[no_mangle]
-pub unsafe extern "C" fn test_roundtrip_level2(mut name: *const libc::c_char,
-                                               mut file_name:
-                                                   *const libc::c_char) {
-    let mut f: *mut FILE =
-        fopen(file_name, b"rb\x00" as *const u8 as *const libc::c_char);
-    if f.is_null() {
-        printf(b"Error: can not open %s!\n\x00" as *const u8 as
-                   *const libc::c_char, file_name);
-        exit(1 as libc::c_int);
-    }
-    fseek(f, 0 as libc::c_long, 2 as libc::c_int);
-    let mut file_size: libc::c_long = ftell(f);
-    rewind(f);
-    let mut file_buffer: *mut uint8_t =
-        malloc(file_size as libc::c_ulong) as *mut uint8_t;
-    let mut read: libc::c_long =
-        fread(file_buffer as *mut libc::c_void,
-              1 as libc::c_int as libc::c_ulong, file_size as libc::c_ulong,
-              f) as libc::c_long;
-    fclose(f);
-    if read != file_size {
-        free(file_buffer as *mut libc::c_void);
-        printf(b"Error: only read %ld bytes!\n\x00" as *const u8 as
-                   *const libc::c_char, read);
-        exit(1 as libc::c_int);
-    }
-    let mut compressed_buffer: *mut uint8_t =
-        malloc((1.05f64 * file_size as libc::c_double) as libc::c_ulong) as
-            *mut uint8_t;
-    let mut compressed_size: libc::c_int =
-        fastlz_compress_level(2 as libc::c_int,
-                              file_buffer as *const libc::c_void,
+pub unsafe fn test_roundtrip_level2(name: &str, file_name: &str) {
+    let mut f = File::open(file_name)
+                        .expect(&format!("Error: can not open {}", file_name));
+    let file_size: usize = f.metadata().unwrap().len().try_into().unwrap();
+
+    let mut file_buffer: Vec<u8> = Vec::new();
+    let read = f.read_to_end(&mut file_buffer)
+                    .expect("Error: Cannot read all file into memory");
+    assert_eq!(read, file_size, "Error: cannot read all bytes!");
+
+    let compressed_buffer_size = (1.05 * file_size as f64) as usize;
+    let mut compressed_buffer: Vec<u8> = vec![0u8; compressed_buffer_size];
+    let compressed_size: libc::c_int = fastlz_compress_level(2 as libc::c_int,
+                              file_buffer.as_ptr() as *const libc::c_void,
                               file_size as libc::c_int,
-                              compressed_buffer as *mut libc::c_void);
-    let mut ratio: libc::c_double =
-        100.0f64 * compressed_size as libc::c_double /
-            file_size as libc::c_double;
-    let mut uncompressed_buffer: *mut uint8_t =
-        malloc(file_size as libc::c_ulong) as *mut uint8_t;
-    memset(uncompressed_buffer as *mut libc::c_void, '-' as i32,
-           file_size as libc::c_ulong);
-    fastlz_decompress(compressed_buffer as *const libc::c_void,
-                      compressed_size,
-                      uncompressed_buffer as *mut libc::c_void,
+                              compressed_buffer.as_ptr() as *mut libc::c_void);
+    let ratio = 100.0 * compressed_size as f64 / file_size as f64;
+
+    let mut uncompressed_buffer: Vec<u8>  = vec!['-' as u8; file_size];
+    fastlz_decompress(compressed_buffer.as_ptr() as *const libc::c_void,
+                      compressed_size as libc::c_int,
+                      uncompressed_buffer.as_ptr() as *mut libc::c_void,
                       file_size as libc::c_int);
-    let mut result: libc::c_int =
-        compare(file_name, file_buffer, uncompressed_buffer,
-                file_size as libc::c_int);
-    if result == 1 as libc::c_int {
-        free(uncompressed_buffer as *mut libc::c_void);
-        exit(1 as libc::c_int);
-    }
-    free(file_buffer as *mut libc::c_void);
-    free(compressed_buffer as *mut libc::c_void);
-    free(uncompressed_buffer as *mut libc::c_void);
-    printf(b"%25s %10ld  -> %10d  (%.2f%%)\n\x00" as *const u8 as
-               *const libc::c_char, name, file_size, compressed_size, ratio);
+
+    let result: libc::c_int = compare(
+        CString::new(file_name).unwrap().as_ptr(),
+        file_buffer.as_ptr() as *const uint8_t,
+        uncompressed_buffer.as_ptr() as *const uint8_t,
+        file_size as libc::c_int
+    );
+    assert_ne!(result as i32, 1);
+    println!("{:25} {:10} -> {:10} ({:.2}%)", name, file_size, compressed_size, ratio);
 }
 
 
@@ -424,7 +399,6 @@ fn test_ref_impl_level2() {
 fn test_round_trip_level1() {
     println!("Test round-trip for Level 1");
     corpora.iter().for_each(|corpus| {
-        println!("{}", corpus);
         let f = format!("{}{}", corpora_dir, corpus);
         unsafe {
             test_roundtrip_level1(*corpus, &f);
@@ -437,14 +411,9 @@ fn test_round_trip_level1() {
 fn test_round_trip_level2() {
     println!("Test round-trip for Level 2");
     corpora.iter().for_each(|corpus| {
-        println!("{}", corpus);
         let f = format!("{}{}", corpora_dir, corpus);
-
-        let name: CString = CString::new(*corpus).unwrap();
-        let filename: CString = CString::new(f).unwrap();
-
         unsafe {
-            test_roundtrip_level2(name.as_ptr(), filename.as_ptr());
+            test_roundtrip_level2(*corpus, &f);
         }
     });
     println!();
