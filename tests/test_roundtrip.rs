@@ -16,7 +16,6 @@ use std::io::prelude::*;
 use std::convert::TryInto;
 
 use ::libc;
-use std::ffi::CString;
 
 use ::fastlz_rs;
 
@@ -155,26 +154,23 @@ pub type _IO_lock_t = ();
 pub type FILE = _IO_FILE;
 
 #[no_mangle]
-pub unsafe extern "C" fn compare(mut name: *const libc::c_char,
-                                 mut a: *const uint8_t, mut b: *const uint8_t,
-                                 mut size: libc::c_int) -> libc::c_int {
-    let mut bad: libc::c_int = 0 as libc::c_int;
-    let mut i: libc::c_int = 0;
-    i = 0 as libc::c_int;
-    while i < size {
-        if *a.offset(i as isize) as libc::c_int !=
-               *b.offset(i as isize) as libc::c_int {
-            bad = 1 as libc::c_int;
-            printf(b"Error on %s!\n\x00" as *const u8 as *const libc::c_char,
-                   name);
-            printf(b"Different at index %d: expecting %02x,actual %02x\n\x00"
-                       as *const u8 as *const libc::c_char, i,
-                   *a.offset(i as isize) as libc::c_int,
-                   *b.offset(i as isize) as libc::c_int);
-            break ;
-        } else { i += 1 }
+fn compare(name: &str, a: &Vec<u8>,  b: &Vec<u8>) -> bool {
+    let a_iter = a.iter();
+    let b_iter = b.iter();
+    let res = a_iter.zip(b_iter)
+        .enumerate()
+        .find(|(_idx, (ea, eb))| {
+            ea != eb
+        });
+
+    if let Some(invalid_element) = res {
+        let (idx,( ea, eb)) = invalid_element;
+        println!("Error on : {}", name);
+        println!("Different at index {}: expecting {:02x}, actual {:02x}", idx, ea, eb);
+        false
+    } else {
+        true
     }
-    return bad;
 }
 /*
   Same as test_roundtrip_level1 EXCEPT that the decompression is carried out
@@ -207,13 +203,11 @@ pub unsafe fn test_ref_decompressor_level1(name: &str, file_name: &str) {
         uncompressed_buffer.as_ptr() as *mut uint8_t
     );
 
-    let result: libc::c_int = compare(
-        CString::new(file_name).unwrap().as_ptr(),
-        file_buffer.as_ptr() as *const uint8_t,
-        uncompressed_buffer.as_ptr() as *const uint8_t,
-        file_size as libc::c_int
-    );
-    assert_ne!(result as i32, 1);
+    assert!(compare(
+        file_name,
+        &file_buffer,
+        &uncompressed_buffer
+    ));
     println!("{:25} {:10} -> {:10} ({:.2}%)", name, file_size, compressed_size, ratio);
 }
 
@@ -250,13 +244,12 @@ pub unsafe fn test_ref_decompressor_level2(name: &str, file_name: &str) {
         compressed_size as libc::c_int,
         uncompressed_buffer.as_ptr() as *mut uint8_t
     );
-    let result: libc::c_int = compare(
-        CString::new(file_name).unwrap().as_ptr(),
-        file_buffer.as_ptr() as *const uint8_t,
-        uncompressed_buffer.as_ptr() as *const uint8_t,
-        file_size as libc::c_int
-    );
-    assert_ne!(result as i32, 1);
+
+    assert!(compare(
+        file_name,
+        &file_buffer,
+        &uncompressed_buffer
+    ));
     println!("{:25} {:10} -> {:10} ({:.2}%)", name, file_size, compressed_size, ratio);
 }
 /*
@@ -290,13 +283,11 @@ pub unsafe fn test_roundtrip_level1(name: &str, file_name: &str) {
                       uncompressed_buffer.as_ptr() as *mut libc::c_void,
                       file_size as libc::c_int);
 
-    let result: libc::c_int = compare(
-        CString::new(file_name).unwrap().as_ptr(),
-        file_buffer.as_ptr() as *const uint8_t,
-        uncompressed_buffer.as_ptr() as *const uint8_t,
-        file_size as libc::c_int
-    );
-    assert_ne!(result as i32, 1);
+    assert!(compare(
+        file_name,
+        &file_buffer,
+        &uncompressed_buffer
+    ));
     println!("{:25} {:10} -> {:10} ({:.2}%)", name, file_size, compressed_size, ratio);
 }
 /*
@@ -330,13 +321,11 @@ pub unsafe fn test_roundtrip_level2(name: &str, file_name: &str) {
                       uncompressed_buffer.as_ptr() as *mut libc::c_void,
                       file_size as libc::c_int);
 
-    let result: libc::c_int = compare(
-        CString::new(file_name).unwrap().as_ptr(),
-        file_buffer.as_ptr() as *const uint8_t,
-        uncompressed_buffer.as_ptr() as *const uint8_t,
-        file_size as libc::c_int
-    );
-    assert_ne!(result as i32, 1);
+    assert!(compare(
+        file_name,
+        &file_buffer,
+        &uncompressed_buffer
+    ));
     println!("{:25} {:10} -> {:10} ({:.2}%)", name, file_size, compressed_size, ratio);
 }
 
