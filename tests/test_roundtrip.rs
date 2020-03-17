@@ -177,7 +177,7 @@ fn compare(name: &str, a: &Vec<u8>,  b: &Vec<u8>) -> bool {
   using the highly-simplified, unoptimized vanilla reference decompressor.
 */
 #[no_mangle]
-pub unsafe fn test_ref_decompressor_level1(name: &str, file_name: &str) {
+unsafe fn test_ref_decompressor_level1(name: &str, file_name: &str) {
     let mut f = File::open(file_name)
                 .expect(&format!("Error: can not open {}", file_name));
     let file_size: usize = f.metadata().unwrap().len().try_into().unwrap();
@@ -216,7 +216,7 @@ pub unsafe fn test_ref_decompressor_level1(name: &str, file_name: &str) {
   using the highly-simplified, unoptimized vanilla reference decompressor.
 */
 #[no_mangle]
-pub unsafe fn test_ref_decompressor_level2(name: &str, file_name: &str) {
+unsafe fn test_ref_decompressor_level2(name: &str, file_name: &str) {
     let mut f = File::open(file_name)
                 .expect(&format!("Error: can not open {}", file_name));
     let file_size: usize = f.metadata().unwrap().len().try_into().unwrap();
@@ -259,7 +259,7 @@ pub unsafe fn test_ref_decompressor_level2(name: &str, file_name: &str) {
   Compare the result with the original file content.
 */
 #[no_mangle]
-pub unsafe fn test_roundtrip_level1(name: &str, file_name: &str) {
+unsafe fn test_roundtrip_level1(name: &str, file_name: &str) {
     let mut f = File::open(file_name)
                         .expect(&format!("Error: can not open {}", file_name));
     let file_size: usize = f.metadata().unwrap().len().try_into().unwrap();
@@ -297,7 +297,7 @@ pub unsafe fn test_roundtrip_level1(name: &str, file_name: &str) {
   Compare the result with the original file content.
 */
 #[no_mangle]
-pub unsafe fn test_roundtrip_level2(name: &str, file_name: &str) {
+unsafe fn test_roundtrip_level2(name: &str, file_name: &str) {
     let mut f = File::open(file_name)
                         .expect(&format!("Error: can not open {}", file_name));
     let file_size: usize = f.metadata().unwrap().len().try_into().unwrap();
