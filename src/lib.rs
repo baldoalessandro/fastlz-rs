@@ -15,3 +15,4 @@
 extern crate libc;
 
 pub mod fastlz;
+pub use fastlz::{fastlz_compress_level, fastlz_decompress};
