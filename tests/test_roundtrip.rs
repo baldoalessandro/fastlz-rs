@@ -11,10 +11,14 @@
 #![feature(register_tool)]
 #![register_tool(c2rust)]
 
-use ::libc;
-use ::fastlz_rs;
+use std::fs::File;
+use std::io::prelude::*;
+use std::convert::TryInto;
 
+use ::libc;
 use std::ffi::CString;
+
+use ::fastlz_rs;
 
 
 mod refimpl;
@@ -56,28 +60,7 @@ extern "C" {
      -> *mut libc::c_char;
     #[no_mangle]
     fn strlen(_: *const libc::c_char) -> libc::c_ulong;
-    /*
-  FastLZ - Byte-aligned LZ77 compression library
-  Copyright (C) 2005-2020 Ariya Hidayat <ariya.hidayat@gmail.com>
 
-  Permission is hereby granted, free of charge, to any person obtaining a copy
-  of this software and associated documentation files (the "Software"), to deal
-  in the Software without restriction, including without limitation the rights
-  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-  copies of the Software, and to permit persons to whom the Software is
-  furnished to do so, subject to the following conditions:
-
-  The above copyright notice and this permission notice shall be included in
-  all copies or substantial portions of the Software.
-
-  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-  THE SOFTWARE.
-*/
     /* *
   Compress a block of data in the input buffer and returns the size of
   compressed block. The size of input buffer is specified by length. The
@@ -170,28 +153,7 @@ pub struct _IO_FILE {
 }
 pub type _IO_lock_t = ();
 pub type FILE = _IO_FILE;
-/*
-  FastLZ - Byte-aligned LZ77 compression library
-  Copyright (C) 2005-2020 Ariya Hidayat <ariya.hidayat@gmail.com>
 
-  Permission is hereby granted, free of charge, to any person obtaining a copy
-  of this software and associated documentation files (the "Software"), to deal
-  in the Software without restriction, including without limitation the rights
-  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-  copies of the Software, and to permit persons to whom the Software is
-  furnished to do so, subject to the following conditions:
-
-  The above copyright notice and this permission notice shall be included in
-  all copies or substantial portions of the Software.
-
-  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-  THE SOFTWARE.
-*/
 #[no_mangle]
 pub unsafe extern "C" fn compare(mut name: *const libc::c_char,
                                  mut a: *const uint8_t, mut b: *const uint8_t,
@@ -219,63 +181,44 @@ pub unsafe extern "C" fn compare(mut name: *const libc::c_char,
   using the highly-simplified, unoptimized vanilla reference decompressor.
 */
 #[no_mangle]
-pub unsafe extern "C" fn test_ref_decompressor_level1(mut name:
-                                                          *const libc::c_char,
-                                                      mut file_name:
-                                                          *const libc::c_char) {
-    let mut f: *mut FILE =
-        fopen(file_name, b"rb\x00" as *const u8 as *const libc::c_char);
-    if f.is_null() {
-        printf(b"Error: can not open %s!\n\x00" as *const u8 as
-                   *const libc::c_char, file_name);
-        exit(1 as libc::c_int);
-    }
-    fseek(f, 0 as libc::c_long, 2 as libc::c_int);
-    let mut file_size: libc::c_long = ftell(f);
-    rewind(f);
-    let mut file_buffer: *mut uint8_t =
-        malloc(file_size as libc::c_ulong) as *mut uint8_t;
-    let mut read: libc::c_long =
-        fread(file_buffer as *mut libc::c_void,
-              1 as libc::c_int as libc::c_ulong, file_size as libc::c_ulong,
-              f) as libc::c_long;
-    fclose(f);
-    if read != file_size {
-        free(file_buffer as *mut libc::c_void);
-        printf(b"Error: only read %ld bytes!\n\x00" as *const u8 as
-                   *const libc::c_char, read);
-        exit(1 as libc::c_int);
-    }
-    let mut compressed_buffer: *mut uint8_t =
-        malloc((1.05f64 * file_size as libc::c_double) as libc::c_ulong) as
-            *mut uint8_t;
-    let mut compressed_size: libc::c_int =
-        fastlz_compress_level(1 as libc::c_int,
-                              file_buffer as *const libc::c_void,
-                              file_size as libc::c_int,
-                              compressed_buffer as *mut libc::c_void);
-    let mut ratio: libc::c_double =
-        100.0f64 * compressed_size as libc::c_double /
-            file_size as libc::c_double;
-    let mut uncompressed_buffer: *mut uint8_t =
-        malloc(file_size as libc::c_ulong) as *mut uint8_t;
-    memset(uncompressed_buffer as *mut libc::c_void, '-' as i32,
-           file_size as libc::c_ulong);
-    REF_Level1_decompress(compressed_buffer, compressed_size,
-                          uncompressed_buffer);
-    let mut result: libc::c_int =
-        compare(file_name, file_buffer, uncompressed_buffer,
-                file_size as libc::c_int);
-    if result == 1 as libc::c_int {
-        free(uncompressed_buffer as *mut libc::c_void);
-        exit(1 as libc::c_int);
-    }
-    free(file_buffer as *mut libc::c_void);
-    free(compressed_buffer as *mut libc::c_void);
-    free(uncompressed_buffer as *mut libc::c_void);
-    printf(b"%25s %10ld  -> %10d  (%.2f%%)\n\x00" as *const u8 as
-               *const libc::c_char, name, file_size, compressed_size, ratio);
+pub unsafe fn test_ref_decompressor_level1(name: &str, file_name: &str) {
+    let mut f = File::open(file_name)
+                .expect(&format!("Error: can not open {}", file_name));
+    let file_size: usize = f.metadata().unwrap().len().try_into().unwrap();
+
+    let mut file_buffer: Vec<u8> = Vec::new();
+    let read = f.read_to_end(&mut file_buffer)
+                    .expect("Error: Cannot read all file into memory");
+    assert_eq!(read, file_size, "Error: cannot read all bytes!");
+
+    let compressed_buffer_size = (1.05 * file_size as f64) as usize;
+    let mut compressed_buffer: Vec<u8> = vec![0u8; compressed_buffer_size];
+    let compressed_size: libc::c_int =
+    fastlz_compress_level(1 as libc::c_int,
+                            file_buffer.as_ptr() as *const libc::c_void,
+                            file_size as libc::c_int,
+                            compressed_buffer.as_ptr() as *mut libc::c_void);
+
+    let ratio = 100.0 * compressed_size as f64 / file_size as f64;
+    let mut uncompressed_buffer: Vec<u8>  = vec!['-' as u8; file_size];
+
+    REF_Level1_decompress(
+        compressed_buffer.as_ptr() as *const uint8_t,
+        compressed_size as libc::c_int,
+        uncompressed_buffer.as_ptr() as *mut uint8_t
+    );
+
+    let result: libc::c_int = compare(
+            CString::new(file_name).unwrap().as_ptr(),
+            file_buffer.as_ptr() as *const uint8_t,
+            uncompressed_buffer.as_ptr() as *const uint8_t,
+            file_size as libc::c_int
+        );
+
+    assert_ne!(result as i32, 1);
+    println!("{:25} {:10} -> {:10} ({:.2}%)", name, file_size, compressed_size, ratio);
 }
+
 /*
   Same as test_roundtrip_level2 EXCEPT that the decompression is carried out
   using the highly-simplified, unoptimized vanilla reference decompressor.
@@ -508,14 +451,9 @@ const corpora: &'static[&'static str] = &[
 fn test_ref_impl_level1() {
     println!("Test reference decompressor for Level 1");
     corpora.iter().for_each(|corpus| {
-        println!("{}", corpus);
         let f = format!("{}{}", corpora_dir, corpus);
-
-        let name: CString = CString::new(*corpus).unwrap();
-        let filename: CString = CString::new(f).unwrap();
-
         unsafe {
-            test_ref_decompressor_level1(name.as_ptr(), filename.as_ptr());
+            test_ref_decompressor_level1(*corpus, &f);
         }
     });
     println!();
