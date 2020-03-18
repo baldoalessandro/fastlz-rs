@@ -1,0 +1,10 @@
+[package]
+name = "fastlz-sys"
+version = "0.1.0"
+authors = ["Alessandro Baldo <baldoalessandro@users.noreply.github.com>"]
+edition = "2018"
+
+
+[build-dependencies]
+bindgen = "0.53.2"
+cc = { version = "1", features = ["parallel"] }

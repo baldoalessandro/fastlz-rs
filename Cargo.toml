@@ -1,7 +1,3 @@
-[workspace]
-members = [
-]
-
 [package]
 name = "fastlz-rs"
 authors = ["C2Rust"]
@@ -14,9 +10,13 @@ autobins = false
 name = "fastlz_rs"
 crate-type = ["staticlib", "rlib"]
 
+[features]
+sys = ["fastlz-sys"]
 
 [dependencies]
 libc = "0.2"
+fastlz-sys = { version = "0.1.0", path = "fastlz-sys", optional = true }
 
-
+[workspace]
+members = ["fastlz-sys"]
 

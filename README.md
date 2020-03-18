@@ -16,7 +16,7 @@ cargo test -- --test-threads=1 --show-output
 
 ## TODO
 
- - [ ] add a -sys crate to cross-test the porting against the C implementation
+ - [x] add a -sys crate to cross-test the porting against the C implementation
  - [ ] automate Rust vs C roundtrip test results comparison
  - [ ] port the actual code
 
