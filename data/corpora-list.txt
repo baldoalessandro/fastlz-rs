@@ -1,0 +1,12 @@
+canterbury/alice29.txt
+canterbury/asyoulik.txt
+canterbury/cp.html
+canterbury/fields.c
+canterbury/grammar.lsp
+canterbury/kennedy.xls
+canterbury/lcet10.txt
+canterbury/plrabn12.txt
+canterbury/ptt5
+canterbury/sum
+canterbury/xargs.1
+

@@ -17,6 +17,14 @@ sys = ["fastlz-sys"]
 libc = "0.2"
 fastlz-sys = { version = "0.1.0", path = "fastlz-sys", optional = true }
 
+[dev-dependencies]
+criterion = "0.3"
+fastlz-sys = { version = "0.1.0", path = "fastlz-sys" }
+
 [workspace]
 members = ["fastlz-sys"]
 
+
+[[bench]]
+name = "compare_compression"
+harness = false
