@@ -145,10 +145,7 @@ unsafe fn test_roundtrip_level1(name: &str, file_name: &str) {
     let ratio = 100.0 * compressed_size as f64 / file_size as f64;
 
     let mut uncompressed_buffer: Vec<u8>  = vec!['-' as u8; file_size];
-    fastlz_decompress(compressed_buffer.as_ptr() as *const libc::c_void,
-                      compressed_size as libc::c_int,
-                      uncompressed_buffer.as_ptr() as *mut libc::c_void,
-                      file_size as libc::c_int);
+    fastlz_decompress(&compressed_buffer, &uncompressed_buffer,);
 
     assert!(compare(
         file_name,
@@ -184,10 +181,7 @@ unsafe fn test_roundtrip_level2(name: &str, file_name: &str) {
     let ratio = 100.0 * compressed_size as f64 / file_size as f64;
 
     let mut uncompressed_buffer: Vec<u8>  = vec!['-' as u8; file_size];
-    fastlz_decompress(compressed_buffer.as_ptr() as *const libc::c_void,
-                      compressed_size as libc::c_int,
-                      uncompressed_buffer.as_ptr() as *mut libc::c_void,
-                      file_size as libc::c_int);
+    fastlz_decompress(&compressed_buffer, &uncompressed_buffer,);
 
     assert!(compare(
         file_name,

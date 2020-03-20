@@ -1,4 +1,6 @@
 use ::libc;
+use std::convert::TryInto;
+
 extern "C" {
     #[no_mangle]
     fn memcpy(_: *mut libc::c_void, _: *const libc::c_void, _: libc::c_ulong)
@@ -884,39 +886,53 @@ pub unsafe extern "C" fn fastlz_compress(mut input: *const libc::c_void,
     /* else... */
     return fastlz2_compress(input, length, output);
 }
-/* *
-  Decompress a block of compressed data and returns the size of the
-  decompressed block. If error occurs, e.g. the compressed data is
-  corrupted or the output buffer is not large enough, then 0 (zero)
-  will be returned instead.
 
-  The input buffer and the output buffer can not overlap.
 
-  Decompression is memory safe and guaranteed not to write the output buffer
-  more than what is specified in maxout.
-
-  Note that the decompression will always work, regardless of the
-  compression level specified in fastlz_compress_level above (when
-  producing the compressed block).
- */
+/// Decompress a block of compressed data and returns the size of the
+/// decompressed block. If error occurs, e.g. the compressed data is
+/// corrupted or the output buffer is not large enough, then 0 (zero)
+/// will be returned instead.
+///
+/// The input buffer and the output buffer can not overlap.
+///
+/// Decompression is memory safe and guaranteed not to write the output buffer
+/// more than what is specified in maxout.
+///
+/// Note that the decompression will always work, regardless of the
+/// compression level specified in fastlz_compress_level above (when
+/// producing the compressed block).
+///
 #[no_mangle]
-pub unsafe extern "C" fn fastlz_decompress(mut input: *const libc::c_void,
-                                           mut length: libc::c_int,
-                                           mut output: *mut libc::c_void,
-                                           mut maxout: libc::c_int)
- -> libc::c_int {
-    /* magic identifier for compression level */
-    let mut level: libc::c_int =
-        (*(input as *const uint8_t) as libc::c_int >> 5 as libc::c_int) +
-            1 as libc::c_int;
-    if level == 1 as libc::c_int {
-        return fastlz1_decompress(input, length, output, maxout)
+pub fn fastlz_decompress(input: &[u8], mut output: &[u8]) -> i32 {
+    let length: i32 = input.len().try_into().unwrap();
+    let maxout: i32 = output.len().try_into().unwrap();
+
+    // magic identifier for compression level
+    let level = (input[0] >> 5 ) + 1;
+    match level {
+        1 => {
+            unsafe {
+                fastlz1_decompress(
+                    input.as_ptr() as *const libc::c_void,
+                    length,
+                    output.as_ptr() as *mut libc::c_void,
+                    maxout
+                )
+            }
+        }
+        2 => {
+            unsafe {
+                fastlz2_decompress(
+                    input.as_ptr() as *const libc::c_void,
+                    length,
+                    output.as_ptr() as *mut libc::c_void,
+                    maxout
+                )
+            }
+        }
+        // unknown level, trigger error
+        _ => 0
     }
-    if level == 2 as libc::c_int {
-        return fastlz2_decompress(input, length, output, maxout)
-    }
-    /* unknown level, trigger error */
-    return 0 as libc::c_int;
 }
 
 
@@ -965,4 +981,31 @@ pub fn fastlz_compress_level(level: i32, input: &[u8], mut output: &[u8]) -> i32
         }
         _ => 0
     }
+}
+
+
+
+#[cfg(test)]
+mod tests {
+
+    use super::*;
+
+    const fixture_orig: &[u8] = include_bytes!("../tests/data/sample.txt");
+    const fixture_comp_lv1: &[u8] = include_bytes!("../tests/data/compressed-lvl1.lz");
+    const fixture_comp_lv2: &[u8] = include_bytes!("../tests/data/compressed-lvl2.lz");
+
+    #[test]
+    fn test_fastlz_decompress_with_level1_input() {
+       let mut output = vec![0u8; fixture_orig.len()];
+       fastlz_decompress(&fixture_comp_lv1, &output);
+       assert_eq!(fixture_orig, &output[..]);
+    }
+
+    #[test]
+    fn test_fastlz_decompress_with_level2_input() {
+       let mut output = vec![0u8; fixture_orig.len()];
+       fastlz_decompress(&fixture_comp_lv2, &output);
+       assert_eq!(fixture_orig, &output[..]);
+    }
+
 }

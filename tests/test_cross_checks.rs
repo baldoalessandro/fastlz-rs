@@ -57,8 +57,8 @@ mod crosschecks {
 
     #[test]
     fn test_fastlz_decompress_level_1() {
-        let input_orig = include_bytes!("./data/sample.txt");
-        let input_comp = include_bytes!("./data/compressed-lvl1.lz");
+        let input_orig: &[u8] = include_bytes!("./data/sample.txt");
+        let input_comp: &[u8] = include_bytes!("./data/compressed-lvl1.lz");
         let orig_size = input_orig.len();
         let comp_size = input_comp.len();
 
@@ -73,14 +73,7 @@ mod crosschecks {
         };
 
         let native_buff = vec![0u8; orig_size + 100];
-        let native_size = unsafe {
-            native::fastlz_decompress(
-                input_comp.as_ptr() as *const c_void,
-                comp_size as c_int,
-                native_buff.as_ptr() as *mut c_void,
-                orig_size as c_int,
-            )
-        };
+        let native_size = native::fastlz_decompress(&input_comp, &native_buff);
 
         assert_eq!(sys_size, native_size);
         assert_eq!(orig_size as i32, sys_size);
@@ -89,8 +82,8 @@ mod crosschecks {
 
     #[test]
     fn test_fastlz_decompress_level_2() {
-        let input_orig = include_bytes!("./data/sample.txt");
-        let input_comp = include_bytes!("./data/compressed-lvl2.lz");
+        let input_orig: &[u8] = include_bytes!("./data/sample.txt");
+        let input_comp: &[u8] = include_bytes!("./data/compressed-lvl2.lz");
         let orig_size = input_orig.len();
         let comp_size = input_comp.len();
 
@@ -105,14 +98,7 @@ mod crosschecks {
         };
 
         let native_buff = vec![0u8; orig_size];
-        let native_size = unsafe {
-            native::fastlz_decompress(
-                input_comp.as_ptr() as *const c_void,
-                comp_size as c_int,
-                native_buff.as_ptr() as *mut c_void,
-                orig_size as c_int,
-            )
-        };
+        let native_size = native::fastlz_decompress(&input_comp, &native_buff);
 
         assert_eq!(sys_size, native_size);
         assert_eq!(orig_size as i32, sys_size);
