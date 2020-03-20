@@ -918,60 +918,51 @@ pub unsafe extern "C" fn fastlz_decompress(mut input: *const libc::c_void,
     /* unknown level, trigger error */
     return 0 as libc::c_int;
 }
-/*
-  FastLZ - Byte-aligned LZ77 compression library
-  Copyright (C) 2005-2020 Ariya Hidayat <ariya.hidayat@gmail.com>
 
-  Permission is hereby granted, free of charge, to any person obtaining a copy
-  of this software and associated documentation files (the "Software"), to deal
-  in the Software without restriction, including without limitation the rights
-  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-  copies of the Software, and to permit persons to whom the Software is
-  furnished to do so, subject to the following conditions:
 
-  The above copyright notice and this permission notice shall be included in
-  all copies or substantial portions of the Software.
 
-  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-  THE SOFTWARE.
-*/
-/* *
-  Compress a block of data in the input buffer and returns the size of
-  compressed block. The size of input buffer is specified by length. The
-  minimum input buffer size is 16.
-
-  The output buffer must be at least 5% larger than the input buffer
-  and can not be smaller than 66 bytes.
-
-  If the input is not compressible, the return value might be larger than
-  length (input buffer size).
-
-  The input buffer and the output buffer can not overlap.
-
-  Compression level can be specified in parameter level. At the moment,
-  only level 1 and level 2 are supported.
-  Level 1 is the fastest compression and generally useful for short data.
-  Level 2 is slightly slower but it gives better compression ratio.
-
-  Note that the compressed data, regardless of the level, can always be
-  decompressed using the function fastlz_decompress below.
-*/
+/// Compress a block of data in the input buffer and returns the size of
+/// compressed block. The size of input buffer is specified by length. The
+/// minimum input buffer size is 16.
+///
+/// The output buffer must be at least 5% larger than the input buffer
+/// and can not be smaller than 66 bytes.
+///
+/// If the input is not compressible, the return value might be larger than
+/// length (input buffer size).
+///
+/// The input buffer and the output buffer can not overlap.
+///
+/// Compression level can be specified in parameter level. At the moment,
+/// only level 1 and level 2 are supported.
+/// Level 1 is the fastest compression and generally useful for short data.
+/// Level 2 is slightly slower but it gives better compression ratio.
+///
+/// Note that the compressed data, regardless of the level, can always be
+/// decompressed using the function fastlz_decompress below.
+///
 #[no_mangle]
-pub unsafe extern "C" fn fastlz_compress_level(mut level: libc::c_int,
-                                               mut input: *const libc::c_void,
-                                               mut length: libc::c_int,
-                                               mut output: *mut libc::c_void)
- -> libc::c_int {
-    if level == 1 as libc::c_int {
-        return fastlz1_compress(input, length, output)
+pub fn fastlz_compress_level(level: i32, input: &[u8], mut output: &[u8]) -> i32 {
+    let length: i32 = input.len().try_into().unwrap();
+    match level {
+        1 => {
+            unsafe{
+                fastlz1_compress(
+                    input.as_ptr() as *const libc::c_void,
+                    length,
+                    output .as_ptr() as *mut libc::c_void,
+                )
+            }
+        }
+        2 => {
+            unsafe{
+                fastlz2_compress(
+                    input.as_ptr() as *const libc::c_void,
+                    length,
+                    output .as_ptr() as *mut libc::c_void,
+                )
+            }
+        }
+        _ => 0
     }
-    if level == 2 as libc::c_int {
-        return fastlz2_compress(input, length, output)
-    }
-    return 0 as libc::c_int;
 }

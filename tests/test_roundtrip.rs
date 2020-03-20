@@ -54,10 +54,11 @@ unsafe fn test_ref_decompressor_level1(name: &str, file_name: &str) {
 
     let compressed_buffer_size = (1.05 * file_size as f64) as usize;
     let mut compressed_buffer: Vec<u8> = vec![0u8; compressed_buffer_size];
-    let compressed_size: libc::c_int = fastlz_compress_level(1 as libc::c_int,
-                            file_buffer.as_ptr() as *const libc::c_void,
-                            file_size as libc::c_int,
-                            compressed_buffer.as_ptr() as *mut libc::c_void);
+    let compressed_size: libc::c_int = fastlz_compress_level(
+        1,
+        &file_buffer,
+        &compressed_buffer
+    );
 
     let ratio = 100.0 * compressed_size as f64 / file_size as f64;
 
@@ -93,10 +94,11 @@ unsafe fn test_ref_decompressor_level2(name: &str, file_name: &str) {
     let compressed_buffer_size = (1.05 * file_size as f64) as usize;
     let mut compressed_buffer: Vec<u8> = vec![0u8; compressed_buffer_size];
 
-    let compressed_size: libc::c_int = fastlz_compress_level(2 as libc::c_int,
-                                        file_buffer.as_ptr() as *const libc::c_void,
-                                        file_size as libc::c_int,
-                                        compressed_buffer.as_ptr() as *mut libc::c_void);
+    let compressed_size: libc::c_int = fastlz_compress_level(
+        2,
+        &file_buffer,
+        &compressed_buffer
+    );
     let ratio = 100.0 * compressed_size as f64 / file_size as f64;
 
     let mut uncompressed_buffer: Vec<u8>  = vec!['-' as u8; file_size];
@@ -135,10 +137,11 @@ unsafe fn test_roundtrip_level1(name: &str, file_name: &str) {
 
     let compressed_buffer_size = (1.05 * file_size as f64) as usize;
     let mut compressed_buffer: Vec<u8> = vec![0u8; compressed_buffer_size];
-    let  compressed_size: libc::c_int = fastlz_compress_level(1 as libc::c_int,
-                              file_buffer.as_ptr() as *const libc::c_void,
-                              file_size as libc::c_int,
-                              compressed_buffer.as_ptr() as *mut libc::c_void);
+    let  compressed_size: libc::c_int = fastlz_compress_level(
+        1,
+        &file_buffer,
+        &compressed_buffer
+    );
     let ratio = 100.0 * compressed_size as f64 / file_size as f64;
 
     let mut uncompressed_buffer: Vec<u8>  = vec!['-' as u8; file_size];
@@ -173,10 +176,11 @@ unsafe fn test_roundtrip_level2(name: &str, file_name: &str) {
 
     let compressed_buffer_size = (1.05 * file_size as f64) as usize;
     let mut compressed_buffer: Vec<u8> = vec![0u8; compressed_buffer_size];
-    let compressed_size: libc::c_int = fastlz_compress_level(2 as libc::c_int,
-                              file_buffer.as_ptr() as *const libc::c_void,
-                              file_size as libc::c_int,
-                              compressed_buffer.as_ptr() as *mut libc::c_void);
+    let compressed_size: libc::c_int = fastlz_compress_level(
+        2,
+        &file_buffer,
+        &compressed_buffer
+    );
     let ratio = 100.0 * compressed_size as f64 / file_size as f64;
 
     let mut uncompressed_buffer: Vec<u8>  = vec!['-' as u8; file_size];

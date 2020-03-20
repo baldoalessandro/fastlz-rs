@@ -11,7 +11,7 @@ mod crosschecks {
 
     #[test]
     fn test_fastlz_compress_level_1() {
-        let input = include_bytes!("./data/sample.txt");
+        let input: &[u8] = include_bytes!("./data/sample.txt");
         let input_size = input.len();
 
         // compress the input ( require a buffer 5% bigger than the input)
@@ -26,14 +26,7 @@ mod crosschecks {
         };
 
         let native_buff = vec![0u8; (input_size as f64 * 1.05) as usize];
-        let native_size = unsafe {
-            native::fastlz_compress_level(
-                1 as c_int,
-                input.as_ptr() as *const c_void,
-                input_size as c_int,
-                native_buff.as_ptr() as *mut c_void
-            )
-        };
+        let native_size = native::fastlz_compress_level(1, &input, &native_buff);
 
         assert_eq!(sys_size, native_size);
         assert!(compare_buffers(&sys_buff, &native_buff));
@@ -41,7 +34,7 @@ mod crosschecks {
 
     #[test]
     fn test_fastlz_compress_level_2() {
-        let input = include_bytes!("./data/sample.txt");
+        let input: &[u8] = include_bytes!("./data/sample.txt");
         let input_size = input.len();
 
         // compress the input ( require a buffer 5% bigger than the input)
@@ -56,14 +49,7 @@ mod crosschecks {
         };
 
         let native_buff = vec![0u8; (input_size as f64 * 1.05) as usize];
-        let native_size = unsafe {
-            native::fastlz_compress_level(
-                2 as c_int,
-                input.as_ptr() as *const c_void,
-                input_size as c_int,
-                native_buff.as_ptr() as *mut c_void
-            )
-        };
+        let native_size = native::fastlz_compress_level(2, &input, &native_buff);
 
         assert_eq!(sys_size, native_size);
         assert!(compare_buffers(&sys_buff, &native_buff));
