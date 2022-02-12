@@ -5,13 +5,11 @@ use std::io::prelude::*;
 use std::os::raw::{c_void, c_int};
 
 use fastlz_sys::fastlz_compress_level as sys_compress;
-use fastlz_rs::fastlz_compress_level as native_compress;
+use fastlz_rs::compress as native_compress;
 
 
-const CORPORA_DIR: &'static str = "../compression-corpus/";
+const CORPORA_DIR: &'static str = "../data/compression-corpus/";
 const CORPORA: &'static str = include_str!("../data/corpora-list.txt");
-
-
 
 fn bench_compression_against_c_impl(c: &mut Criterion) {
     let mut group = c.benchmark_group("Benchmark FastLZ compression");
@@ -27,8 +25,8 @@ fn bench_compression_against_c_impl(c: &mut Criterion) {
         let file_size = file_buf.len();
 
         let comp_buf_size = (1.05 * file_size as f64) as usize;
-        let comp_buf_sys: Vec<u8> = vec![0u8; comp_buf_size];
-        let comp_buf_native: Vec<u8> = vec![0u8; comp_buf_size];
+        let mut comp_buf_sys: Vec<u8> = vec![0u8; comp_buf_size];
+        let mut comp_buf_native: Vec<u8> = vec![0u8; comp_buf_size];
 
         group.bench_with_input(BenchmarkId::new("C via FFI", &corpus), &corpus, 
             |b, _corpus| b.iter(|| {
@@ -37,20 +35,18 @@ fn bench_compression_against_c_impl(c: &mut Criterion) {
                         1 as c_int,
                         file_buf.as_ptr() as *const c_void,
                         file_size as c_int,
-                        comp_buf_sys.as_ptr() as *mut c_void
+                        comp_buf_sys.as_mut_ptr() as *mut c_void
                     )
                 }
             }));
+
         group.bench_with_input(BenchmarkId::new("RUST", &corpus), &corpus, 
             |b, _corpus| b.iter(|| {
-                unsafe {
-                    native_compress(
-                        1 as c_int,
-                        file_buf.as_ptr() as *const c_void,
-                        file_size as c_int,
-                        comp_buf_native.as_ptr() as *mut c_void
-                    )
-                }
+                native_compress(
+                    1,
+                    &file_buf,
+                    &mut comp_buf_native
+                )
             }));
     }
 

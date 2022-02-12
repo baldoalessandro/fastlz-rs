@@ -1,3 +1,7 @@
 [submodule "fastlz-sys/FastLZ"]
 	path = fastlz-sys/FastLZ
 	url = https://github.com/ariya/FastLZ.git
+
+[submodule "data/compression-corpus"]
+	path = data/compression-corpus
+	url = https://github.com/ariya/compression-corpus.git

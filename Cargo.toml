@@ -3,18 +3,17 @@ name = "fastlz-rs"
 authors = ["C2Rust"]
 version = "0.0.0"
 publish = false
-edition = "2018"
+edition = "2021"
 autobins = false
 
 [lib]
 name = "fastlz_rs"
-crate-type = ["staticlib", "rlib"]
+crate-type = ["cdylib", "rlib"]
 
 [features]
 sys = ["fastlz-sys"]
 
 [dependencies]
-libc = "0.2"
 fastlz-sys = { version = "0.1.0", path = "fastlz-sys", optional = true }
 
 [dev-dependencies]
@@ -23,7 +22,6 @@ fastlz-sys = { version = "0.1.0", path = "fastlz-sys" }
 
 [workspace]
 members = ["fastlz-sys"]
-
 
 [[bench]]
 name = "compare_compression"

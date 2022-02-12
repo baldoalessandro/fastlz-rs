@@ -2,9 +2,8 @@
 name = "fastlz-sys"
 version = "0.1.0"
 authors = ["Alessandro Baldo <baldoalessandro@users.noreply.github.com>"]
-edition = "2018"
-
+edition = "2021"
 
 [build-dependencies]
-bindgen = "0.53.2"
+bindgen = "0.59.2"
 cc = { version = "1", features = ["parallel"] }
