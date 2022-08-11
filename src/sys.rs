@@ -1,8 +1,4 @@
-#![deny(missing_docs)]
-#![deny(warnings)]
-#![no_std]
-
-use std::os::raw::{c_void, c_int};
+use core::ffi::{c_void, c_int};
 
 use fastlz_sys::{
     fastlz_compress_level,

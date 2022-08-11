@@ -1,11 +1,13 @@
+#![feature(core_ffi_c)]
+
 //! Raw FastLZ FFI bindings
 include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
 
 
 #[cfg(test)]
 mod tests {
-    use std::os::raw::{c_int, c_void};
-    use super::*;
+    use core::ffi::{c_int, c_void};
+    use super::{fastlz_compress_level, fastlz_decompress};
 
     #[test]
     fn sanity_test() {

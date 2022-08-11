@@ -1,5 +1,3 @@
-#![allow(non_camel_case_types)]
-
 use std::fs::File;
 use std::io::prelude::*;
 use std::convert::TryInto;
@@ -12,7 +10,6 @@ use ::fastlz_rs::{
 mod refimpl;
 use refimpl::{ref_level1_decompress, ref_level2_decompress};
 
-#[no_mangle]
 fn compare(name: &str, a: &Vec<u8>, b: &Vec<u8>) -> bool {
     let a_iter = a.iter();
     let b_iter = b.iter();
@@ -23,7 +20,7 @@ fn compare(name: &str, a: &Vec<u8>, b: &Vec<u8>) -> bool {
         });
 
     if let Some(invalid_element) = res {
-        let (idx,( ea, eb)) = invalid_element;
+        let (idx, (ea, eb)) = invalid_element;
         println!("Error on : {}", name);
         println!("Different at index {}: expecting {:02x}, actual {:02x}", idx, ea, eb);
         false
@@ -35,8 +32,7 @@ fn compare(name: &str, a: &Vec<u8>, b: &Vec<u8>) -> bool {
 
 // Same as test_roundtrip_level1 EXCEPT that the decompression is carried out
 // using the highly-simplified, unoptimized vanilla reference decompressor.
-#[no_mangle]
-unsafe fn test_ref_decompressor_level1(name: &str, file_name: &str) {
+fn test_ref_decompressor_level1(name: &str, file_name: &str) {
     let mut f = File::open(file_name)
                 .expect(&format!("Error: can not open {}", file_name));
     let file_size: usize = f.metadata().unwrap().len().try_into().unwrap();
@@ -74,8 +70,7 @@ unsafe fn test_ref_decompressor_level1(name: &str, file_name: &str) {
 
 // Same as test_roundtrip_level2 EXCEPT that the decompression is carried out
 // using the highly-simplified, unoptimized vanilla reference decompressor.
-#[no_mangle]
-unsafe fn test_ref_decompressor_level2(name: &str, file_name: &str) {
+fn test_ref_decompressor_level2(name: &str, file_name: &str) {
     let mut f = File::open(file_name)
                 .expect(&format!("Error: can not open {}", file_name));
     let file_size: usize = f.metadata().unwrap().len().try_into().unwrap();
@@ -118,8 +113,7 @@ unsafe fn test_ref_decompressor_level2(name: &str, file_name: &str) {
 // Compress it first using the Level 1 compressor.
 // Decompress the output with Level 1 decompressor.
 // Compare the result with the original file content.
-#[no_mangle]
-unsafe fn test_roundtrip_level1(name: &str, file_name: &str) {
+fn test_roundtrip_level1(name: &str, file_name: &str) {
     let mut f = File::open(file_name)
                         .expect(&format!("Error: can not open {}", file_name));
     let file_size: usize = f.metadata().unwrap().len().try_into().unwrap();
@@ -158,8 +152,7 @@ unsafe fn test_roundtrip_level1(name: &str, file_name: &str) {
 // Compress it first using the Level 2 compressor.
 // Decompress the output with Level 2 decompressor.
 // Compare the result with the original file content.
-#[no_mangle]
-unsafe fn test_roundtrip_level2(name: &str, file_name: &str) {
+fn test_roundtrip_level2(name: &str, file_name: &str) {
     let mut f = File::open(file_name)
                         .expect(&format!("Error: can not open {}", file_name));
     let file_size: usize = f.metadata().unwrap().len().try_into().unwrap();
@@ -229,9 +222,7 @@ fn test_ref_impl_level1() {
     println!("Test reference decompressor for Level 1");
     CORPORA.iter().for_each(|corpus| {
         let f = format!("{}{}", CORPORA_DIR, corpus);
-        unsafe {
-            test_ref_decompressor_level1(*corpus, &f);
-        }
+        test_ref_decompressor_level1(*corpus, &f);
     });
     println!();
 }
@@ -241,9 +232,7 @@ fn test_ref_impl_level2() {
     println!("Test reference decompressor for Level 2");
     CORPORA.iter().for_each(|corpus| {
         let f = format!("{}{}", CORPORA_DIR, corpus);
-        unsafe {
-            test_ref_decompressor_level2(*corpus, &f);
-        }
+        test_ref_decompressor_level2(*corpus, &f);
     });
     println!();
 }
@@ -253,9 +242,7 @@ fn test_round_trip_level1() {
     println!("Test round-trip for Level 1");
     CORPORA.iter().for_each(|corpus| {
         let f = format!("{}{}", CORPORA_DIR, corpus);
-        unsafe {
-            test_roundtrip_level1(*corpus, &f);
-        }
+        test_roundtrip_level1(*corpus, &f);
     });
     println!();
 }
@@ -265,9 +252,7 @@ fn test_round_trip_level2() {
     println!("Test round-trip for Level 2");
     CORPORA.iter().for_each(|corpus| {
         let f = format!("{}{}", CORPORA_DIR, corpus);
-        unsafe {
-            test_roundtrip_level2(*corpus, &f);
-        }
+        test_roundtrip_level2(*corpus, &f);
     });
     println!();
 }

@@ -2,11 +2,11 @@ use criterion::{criterion_group, criterion_main, Criterion, BenchmarkId};
 
 use std::fs::File;
 use std::io::prelude::*;
-use std::os::raw::{c_void, c_int};
 
-use fastlz_sys::fastlz_compress_level as sys_compress;
-use fastlz_rs::compress as native_compress;
-
+use fastlz_rs::{
+    sys::compress as sys_compress,
+    native::compress as native_compress
+};
 
 const CORPORA_DIR: &'static str = "../data/compression-corpus/";
 const CORPORA: &'static str = include_str!("../data/corpora-list.txt");
@@ -32,10 +32,9 @@ fn bench_compression_against_c_impl(c: &mut Criterion) {
             |b, _corpus| b.iter(|| {
                 unsafe {
                     sys_compress(
-                        1 as c_int,
-                        file_buf.as_ptr() as *const c_void,
-                        file_size as c_int,
-                        comp_buf_sys.as_mut_ptr() as *mut c_void
+                        1,
+                        &file_buf,
+                        &mut comp_buf_native
                     )
                 }
             }));

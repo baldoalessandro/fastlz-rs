@@ -25,24 +25,24 @@ pub fn ref_level1_decompress(
                     (input[src + 1] as usize);
             let len = 2 + ((input[src] >> 5) as usize);
             src += 2;
-            let mut ref_0 = dest - ofs - 1;
+            let mut ref_ = dest - ofs - 1;
             for _ in 0..len {
-                output[dest] = output[ref_0];
-                ref_0 += 1;
+                output[dest] = output[ref_];
+                ref_ += 1;
                 dest += 1;
             }
         } else {
             // long match
-            let ofs_0 =
+            let ofs =
                 256 *
                     ((input[src] & 31) as usize) +
                     (input[src + 2] as usize);
             let len = 9 + (input[src + 1] as usize);
             src += 3;
-            let mut ref_1 = dest - (ofs_0 as usize) - 1;
+            let mut ref_ = dest - ofs - 1;
             for _ in 0..len {
-                output[dest] = output[ref_1];
-                ref_1 += 1;
+                output[dest] = output[ref_];
+                ref_ += 1;
                 dest += 1;
             }
         }

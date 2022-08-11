@@ -1,6 +1,8 @@
 mod compress;
 mod decompress;
 
+// Note: Native Implementation of Compression doesn't work
+// Reason is unknown.
 pub use compress::compress;
 pub use decompress::decompress;
 
