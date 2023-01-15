@@ -164,9 +164,12 @@ pub fn decompress(
     output: &mut [u8]
 ) -> Option<usize> {
     // magic identifier for compression level
-    let level = (input[0] >> 5) + 1;
+    let level = input.first().map(|&x| (x >> 5) + 1);
 
-    decompress_level(level, input, output)
+    match level {
+        Some(i) => decompress_level(i, input, output),
+        None => None,
+    }
 }
 
 fn decompress_level(

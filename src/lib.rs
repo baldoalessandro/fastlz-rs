@@ -1,5 +1,4 @@
 #![allow(dead_code)]
-#![feature(core_ffi_c)]
 #![feature(core_intrinsics)]
 #![feature(iter_advance_by)]
 

@@ -5,7 +5,7 @@ A port of [FastLZ](https://github.com/ariya/FastLZ) to Rust.
 ## Testing
 
 Running `cargo test` execute the tests originally in `tests/test_roundtrip.c`.
-To obtain a usefull stdout to compare with the C lib you can, for the moment, use:
+To obtain a useful stdout to compare with the C lib you can, for the moment, use:
 
 ```
 cargo test -- --test-threads=1 --show-output
